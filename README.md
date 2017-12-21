@@ -12,7 +12,6 @@ Supported functions are:
 | --------                      | ----------- |
 |  *READ* <key>                 | Reads and prints value associated with key, else error                |
 |  *WRITE* <key> <value>        | Stores value in key                                                   |
-|  *DELETE* <key>               | Removes key from store                                                |
 |  *START*                      | Start a transaction                                                   |
 |  *COMMIT*                     | Commit a transaction (return error if no transaction)                 |
 |  *ABORT*                      | Abort a transaction and discard all actions in current transaction                |
