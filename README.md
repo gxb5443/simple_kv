@@ -8,6 +8,7 @@ aborted.
 
 ## Usage
 Supported functions are:
+
 | Function                      | Description |
 | --------                      | ----------- |
 |  *READ* <key>                 | Reads and prints value associated with key, else error                |
