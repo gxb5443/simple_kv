@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/gxb5443/pathgather-kv/store"
 )
 
 func main() {
 
+	store := new(store.StackStore)
+	store.Initialize()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), " ")
@@ -20,7 +24,11 @@ func main() {
 				continue
 			}
 			fmt.Println("READING KEY " + line[1])
-			return
+			val, err := store.Read(line[1])
+			fmt.Println(val)
+			if err != nil {
+				fmt.Println(err)
+			}
 		case "WRITE":
 			if len(line) != 3 {
 				fmt.Println("Incorrect Usage")
@@ -28,7 +36,7 @@ func main() {
 				continue
 			}
 			fmt.Println("WRITING VALUE " + line[2] + " To KEY " + line[1])
-			return
+			store.Write(line[1], line[2])
 		case "DELETE":
 			if len(line) != 2 {
 				fmt.Println("Incorrect Usage")
@@ -36,16 +44,12 @@ func main() {
 				continue
 			}
 			fmt.Println("DELETING KEY " + line[1])
-			return
 		case "START":
 			fmt.Println("STARTING Transaction" + line[0])
-			return
 		case "COMMIT":
 			fmt.Println("COMMITING Transaction" + line[0])
-			return
 		case "ABORT":
 			fmt.Println("ABORTING Transaction" + line[0])
-			return
 		case "QUIT":
 			return
 		default:
