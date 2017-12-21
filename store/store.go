@@ -1,9 +1,11 @@
 package store
 
-import "errors"
+import (
+	"errors"
+)
 
 type fieldstack []string
-type transactionstack []*Transaction
+type Transactionstack []*Transaction
 
 type StoreEntry struct {
 	History fieldstack
@@ -11,7 +13,7 @@ type StoreEntry struct {
 
 type StackStore struct {
 	data         map[string]StoreEntry
-	transactions transactionstack
+	Transactions Transactionstack
 }
 
 type Transaction struct {
@@ -19,7 +21,10 @@ type Transaction struct {
 }
 
 func (s fieldstack) Peek() string {
-	return s[len(s)-1]
+	if len(s) > 0 {
+		return s[len(s)-1]
+	}
+	return ""
 }
 func (s fieldstack) Push(v string) fieldstack {
 	return append(s, v)
@@ -33,11 +38,11 @@ func (s fieldstack) Pop() (fieldstack, string, error) {
 	return s[:l-1], s[l-1], nil
 }
 
-func (s transactionstack) Push(v *Transaction) transactionstack {
+func (s Transactionstack) Push(v *Transaction) Transactionstack {
 	return append(s, v)
 }
 
-func (s transactionstack) Pop() (transactionstack, *Transaction, error) {
+func (s Transactionstack) Pop() (Transactionstack, *Transaction, error) {
 	l := len(s)
 	if l == 0 {
 		return s, nil, errors.New("Stack Empty")
@@ -60,10 +65,12 @@ func (ss *StackStore) Write(key, val string) {
 	if _, ok := ss.data[key]; !ok {
 		ss.data[key] = StoreEntry{}
 	}
-	if len(ss.transactions) > 0 {
-		if ss.transactions[len(ss.transactions)-1].fields[key] == false {
-			ss.data[key].History.Push(val)
-			ss.transactions[len(ss.transactions)-1].fields[key] = true
+	if len(ss.Transactions) > 0 {
+		if ss.Transactions[len(ss.Transactions)-1].fields[key] == false {
+			tmpEntry := ss.data[key]
+			tmpEntry.History = tmpEntry.History.Push(val)
+			ss.data[key] = tmpEntry
+			ss.Transactions[len(ss.Transactions)-1].fields[key] = true
 		} else {
 			ss.data[key].History[len(ss.data[key].History)-1] = val
 		}
@@ -75,21 +82,21 @@ func (ss *StackStore) Write(key, val string) {
 }
 
 func (ss *StackStore) Start() {
-	ss.transactions.Push(new(Transaction))
+	ss.Transactions = ss.Transactions.Push(&Transaction{fields: make(map[string]bool)})
 }
 
 func (ss *StackStore) Commit() error {
 	var t *Transaction
-	if len(ss.transactions) == 0 {
+	if len(ss.Transactions) == 0 {
 		return errors.New("No open Transactions")
 	}
-	ss.transactions, t, _ = ss.transactions.Pop()
+	ss.Transactions, t, _ = ss.Transactions.Pop()
 	for f, _ := range t.fields {
 		var tmp string
 		tmpEntry := ss.data[f]
 		tmpEntry.History, tmp, _ = tmpEntry.History.Pop()
 		tmpEntry.History, _, _ = tmpEntry.History.Pop()
-		tmpEntry.History.Push(tmp)
+		tmpEntry.History = tmpEntry.History.Push(tmp)
 		ss.data[f] = tmpEntry
 	}
 	return nil
@@ -98,13 +105,14 @@ func (ss *StackStore) Commit() error {
 func (ss *StackStore) Abort() error {
 	var t *Transaction
 	var err error
-	ss.transactions, t, err = ss.transactions.Pop()
+	ss.Transactions, t, err = ss.Transactions.Pop()
 	if err != nil {
 		return errors.New("No open Transactions")
 	}
 	for f, _ := range t.fields {
 		tmpEntry := ss.data[f]
 		tmpEntry.History, _, err = tmpEntry.History.Pop()
+		ss.data[f] = tmpEntry
 		if err != nil {
 			delete(ss.data, f)
 		}

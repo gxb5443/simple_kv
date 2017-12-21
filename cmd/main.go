@@ -46,10 +46,17 @@ func main() {
 			fmt.Println("DELETING KEY " + line[1])
 		case "START":
 			fmt.Println("STARTING Transaction" + line[0])
+			store.Start()
 		case "COMMIT":
 			fmt.Println("COMMITING Transaction" + line[0])
+			if err := store.Commit(); err != nil {
+				fmt.Println(err)
+			}
 		case "ABORT":
 			fmt.Println("ABORTING Transaction" + line[0])
+			if err := store.Abort(); err != nil {
+				fmt.Println(err)
+			}
 		case "QUIT":
 			return
 		default:
@@ -58,6 +65,6 @@ func main() {
 	}
 
 	if scanner.Err() != nil {
-		// handle error.
+		fmt.Println("Scanner Error")
 	}
 }
