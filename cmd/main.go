@@ -37,13 +37,6 @@ func main() {
 			}
 			fmt.Println("WRITING VALUE " + line[2] + " To KEY " + line[1])
 			store.Write(line[1], line[2])
-		case "DELETE":
-			if len(line) != 2 {
-				fmt.Println("Incorrect Usage")
-				fmt.Println("USAGE: DELETE <key>")
-				continue
-			}
-			fmt.Println("DELETING KEY " + line[1])
 		case "START":
 			fmt.Println("STARTING Transaction" + line[0])
 			store.Start()
